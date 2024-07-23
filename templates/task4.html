@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task 4</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Task 4</h1>
+    <form method="post">
+        <label for="input_data">Input Data:</label>
+        <textarea id="input_data" name="input_data" rows="10" cols="30">{{ request.form.get('input_data', '') }}</textarea>
+        <br>
+        <button type="submit">Submit</button>
+    </form>
+    {% if N is not none and M is not none and ratings_json is not none %}
+    <form method="post">
+        <label for="command">Enter command:</label>
+        <input type="hidden" name="input_data" value="{{ request.form['input_data'] }}">
+        <input type="text" id="command" name="command">
+        <button type="submit">Submit Command</button>
+    </form>
+    {% endif %}
+    {% if result %}
+    <a href="{{ url_for('index') }}" class="back-button">Back to Home</a>
+    <h2>Result:</h2>
+    <p>{{ result }}</p>
+    {% endif %}
+    {% if command_result %}
+    <h2>Command Result:</h2>
+    <ul>
+        {% for res in command_result %}
+        <li>{{ res }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    <a href="{{ url_for('index') }}" class="back-button">Back to Home</a>
+</body>
+</html>

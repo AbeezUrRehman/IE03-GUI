@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task 3</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Task 3</h1>
+    <form method="post">
+        <label for="input_data">Input Data:</label>
+        <textarea id="input_data" name="input_data" rows="10" cols="30"></textarea>
+        <button type="submit">Submit</button>
+    </form>
+    {% if result %}
+    <a href="{{ url_for('index') }}" class="back-button">Back to Home</a>
+    <h2>Recommendations:</h2>
+    <ul>
+        {% for book_id, score in result %}
+        <li>Book {{ book_id }}: {{ score }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    <a href="{{ url_for('index') }}" class="back-button">Back to Home</a>
+</body>
+</html>
