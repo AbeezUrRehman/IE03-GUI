@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task 9</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Task 9</h1>
+    <form method="post">
+        <label for="urls">URLs (comma separated):</label>
+        <input type="text" id="urls" name="urls" required>
+        <br>
+        <label for="words">Words (comma separated):</label>
+        <input type="text" id="words" name="words" required>
+        <br>
+        <label for="links">Links (source,target;...):</label>
+        <input type="text" id="links" name="links" required>
+        <br>
+        <label for="locations">Locations (word,url;...):</label>
+        <input type="text" id="locations" name="locations" required>
+        <br>
+        <label for="pageranks">PageRanks (url:rank,...):</label>
+        <input type="text" id="pageranks" name="pageranks" required>
+        <br>
+        <button type="submit">Submit</button>
+    </form>
+    {% if result %}
+    <h2>Result:</h2>
+    <p>{{ result }}</p>
+    {% endif %}
+    <a href="{{ url_for('index') }}" class="back-button">Back to Home</a>
+</body>
+</html>
