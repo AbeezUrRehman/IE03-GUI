@@ -52,6 +52,11 @@ This project is a book recommendation system implemented using Flask. The system
 
 - **Input Data**: The input data can be provided as plain text or uploaded as a file. The format of the input data may vary depending on the task.
 
+- **Usage**:
+```sh
+python task_.py --N <number> --M <number> --E <number> --R <number> --Q <number> --doc_count <number>
+```
+
 ## Test Data Generator
 
 A test data generator script (`generate_test_data.py`) is provided to generate sample data for testing purposes.
