@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Friendships</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Friendships</h1>
+    <a href="{{ url_for('add_friendship') }}">Add Friendship</a>
+    <ul>
+        {% for friendship in friendships %}
+        <li>
+            User {{ friendship.user_id }} is friends with User {{ friendship.friend_id }}
+            <a href="{{ url_for('edit_friendship', id=friendship.id) }}">Edit</a>
+            <form action="{{ url_for('delete_friendship', id=friendship.id) }}" method="post" style="display:inline;">
+                <button type="submit">Delete</button>
+            </form>
+        </li>
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('index') }}">Back to Home</a>
+</body>
+</html>

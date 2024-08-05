@@ -3,6 +3,9 @@ import sqlite3
 import numpy as np
 import json
 import os
+import networkx as nx
+import requests
+from bs4 import BeautifulSoup
 from tasks.task1 import process_task1
 from tasks.task2 import process_task2
 from tasks.task3 import process_task3
@@ -14,6 +17,12 @@ from tasks.task8 import get_combined_scores, format_scores as format_combined_sc
 from tasks.task9 import create_schema, insert_data
 
 app = Flask(__name__)
+
+# Initialize database connection
+def get_db_connection():
+    conn = sqlite3.connect('book_recommendations.db')
+    conn.row_factory = sqlite3.Row
+    return conn
 
 # Route for the home page
 @app.route('/')
@@ -124,6 +133,311 @@ def task9():
         conn.close()
         result = "Data inserted successfully."
     return render_template('task9.html', result=result)
+
+# Users management routes
+@app.route('/users')
+def users():
+    conn = get_db_connection()
+    users = conn.execute('SELECT * FROM users').fetchall()
+    conn.close()
+    return render_template('users.html', users=users)
+
+@app.route('/add_user', methods=('GET', 'POST'))
+def add_user():
+    if request.method == 'POST':
+        name = request.form['name']
+        conn = get_db_connection()
+        conn.execute('INSERT INTO users (name) VALUES (?)', (name,))
+        conn.commit()
+        conn.close()
+        return redirect(url_for('users'))
+    return render_template('add_user.html')
+
+@app.route('/edit_user/<int:id>', methods=('GET', 'POST'))
+def edit_user(id):
+    conn = get_db_connection()
+    user = conn.execute('SELECT * FROM users WHERE id = ?', (id,)).fetchone()
+
+    if request.method == 'POST':
+        name = request.form['name']
+        conn.execute('UPDATE users SET name = ? WHERE id = ?', (name, id))
+        conn.commit()
+        conn.close()
+        return redirect(url_for('users'))
+
+    conn.close()
+    return render_template('edit_user.html', user=user)
+
+@app.route('/delete_user/<int:id>', methods=('POST',))
+def delete_user(id):
+    conn = get_db_connection()
+    conn.execute('DELETE FROM users WHERE id = ?', (id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('users'))
+
+# Books management routes
+@app.route('/books')
+def books():
+    conn = get_db_connection()
+    books = conn.execute('SELECT * FROM books').fetchall()
+    conn.close()
+    return render_template('books.html', books=books)
+
+@app.route('/add_book', methods=('GET', 'POST'))
+def add_book():
+    if request.method == 'POST':
+        title = request.form['title']
+        author = request.form['author']
+        description = request.form['description']
+        conn = get_db_connection()
+        conn.execute('INSERT INTO books (title, author, description) VALUES (?, ?, ?)', (title, author, description))
+        conn.commit()
+        conn.close()
+        return redirect(url_for('books'))
+    return render_template('add_book.html')
+
+@app.route('/edit_book/<int:id>', methods=('GET', 'POST'))
+def edit_book(id):
+    conn = get_db_connection()
+    book = conn.execute('SELECT * FROM books WHERE id = ?', (id,)).fetchone()
+
+    if request.method == 'POST':
+        title = request.form['title']
+        author = request.form['author']
+        description = request.form['description']
+        conn.execute('UPDATE books SET title = ?, author = ?, description = ? WHERE id = ?', (title, author, description, id))
+        conn.commit()
+        conn.close()
+        return redirect(url_for('books'))
+
+    conn.close()
+    return render_template('edit_book.html', book=book)
+
+@app.route('/delete_book/<int:id>', methods=('POST',))
+def delete_book(id):
+    conn = get_db_connection()
+    conn.execute('DELETE FROM books WHERE id = ?', (id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('books'))
+
+# Friendships management routes
+@app.route('/friendships')
+def friendships():
+    conn = get_db_connection()
+    friendships = conn.execute('SELECT * FROM friendships').fetchall()
+    conn.close()
+    return render_template('friendships.html', friendships=friendships)
+
+@app.route('/add_friendship', methods=('GET', 'POST'))
+def add_friendship():
+    if request.method == 'POST':
+        user_id = request.form['user_id']
+        friend_id = request.form['friend_id']
+        conn = get_db_connection()
+        conn.execute('INSERT INTO friendships (user_id, friend_id) VALUES (?, ?)', (user_id, friend_id))
+        conn.commit()
+        conn.close()
+        return redirect(url_for('friendships'))
+    return render_template('add_friendship.html')
+
+@app.route('/edit_friendship/<int:id>', methods=('GET', 'POST'))
+def edit_friendship(id):
+    conn = get_db_connection()
+    friendship = conn.execute('SELECT * FROM friendships WHERE id = ?', (id,)).fetchone()
+
+    if request.method == 'POST':
+        user_id = request.form['user_id']
+        friend_id = request.form['friend_id']
+        conn.execute('UPDATE friendships SET user_id = ?, friend_id = ? WHERE id = ?', (user_id, friend_id, id))
+        conn.commit()
+        conn.close()
+        return redirect(url_for('friendships'))
+
+    conn.close()
+    return render_template('edit_friendship.html', friendship=friendship)
+
+@app.route('/delete_friendship/<int:id>', methods=('POST',))
+def delete_friendship(id):
+    conn = get_db_connection()
+    conn.execute('DELETE FROM friendships WHERE id = ?', (id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('friendships'))
+
+# Documents management routes
+@app.route('/documents')
+def documents():
+    conn = get_db_connection()
+    documents = conn.execute('SELECT * FROM documents').fetchall()
+    conn.close()
+    return render_template('documents.html', documents=documents)
+
+@app.route('/add_document', methods=('GET', 'POST'))
+def add_document():
+    if request.method == 'POST':
+        book_id = request.form['book_id']
+        content = request.form['content']
+        conn = get_db_connection()
+        conn.execute('INSERT INTO documents (book_id, content) VALUES (?, ?)', (book_id, content))
+        conn.commit()
+        conn.close()
+        return redirect(url_for('documents'))
+    return render_template('add_document.html')
+
+@app.route('/edit_document/<int:id>', methods=('GET', 'POST'))
+def edit_document(id):
+    conn = get_db_connection()
+    document = conn.execute('SELECT * FROM documents WHERE id = ?', (id,)).fetchone()
+
+    if request.method == 'POST':
+        book_id = request.form['book_id']
+        content = request.form['content']
+        conn.execute('UPDATE documents SET book_id = ?, content = ? WHERE id = ?', (book_id, content, id))
+        conn.commit()
+        conn.close()
+        return redirect(url_for('documents'))
+
+    conn.close()
+    return render_template('edit_document.html', document=document)
+
+@app.route('/delete_document/<int:id>', methods=('POST',))
+def delete_document(id):
+    conn = get_db_connection()
+    conn.execute('DELETE FROM documents WHERE id = ?', (id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('documents'))
+
+def get_recommendations(user_id, max_distance):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        SELECT books.title, books.author
+        FROM friendships
+        JOIN users ON users.id = friendships.friend_id
+        JOIN recommendations ON recommendations.user_id = users.id
+        JOIN books ON books.id = recommendations.book_id
+        WHERE friendships.user_id = ? AND friendships.distance <= ?
+        ORDER BY recommendations.score DESC
+    ''', (user_id, max_distance))
+    
+    recommendations = cursor.fetchall()
+    conn.close()
+    return recommendations
+
+@app.route('/recommendations/<int:user_id>')
+def recommendations(user_id):
+    max_distance = request.args.get('max_distance', default=3, type=int)
+    recs = get_recommendations(user_id, max_distance)
+    return render_template('recommendations.html', recommendations=recs)
+
+
+def get_groups():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('SELECT user_id, friend_id FROM friendships')
+    edges = cursor.fetchall()
+    conn.close()
+    
+    G = nx.DiGraph()
+    G.add_edges_from(edges)
+    groups = list(nx.strongly_connected_components(G))
+    
+    return groups
+
+def get_recommendations_from_group(user_id):
+    groups = get_groups()
+    user_group = None
+    for group in groups:
+        if user_id in group:
+            user_group = group
+            break
+    
+    if not user_group:
+        return []
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        SELECT books.title, books.author
+        FROM friendships
+        JOIN users ON users.id = friendships.friend_id
+        JOIN recommendations ON recommendations.user_id = users.id
+        JOIN books ON books.id = recommendations.book_id
+        WHERE friendships.user_id = ? AND friendships.friend_id IN ({})
+        ORDER BY recommendations.score DESC
+    '''.format(','.join('?'*len(user_group))), (user_id, *user_group))
+    
+    recommendations = cursor.fetchall()
+    conn.close()
+    return recommendations
+
+@app.route('/recommendations_group/<int:user_id>')
+def recommendations_group(user_id):
+    recs = get_recommendations_from_group(user_id)
+    return render_template('recommendations.html', recommendations=recs)
+
+
+
+def crawl(url):
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    
+    content = soup.get_text()
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('INSERT INTO documents (content) VALUES (?)', (content,))
+    conn.commit()
+    conn.close()
+
+    for link in soup.find_all('a'):
+        link_url = link.get('href')
+        if link_url:
+            crawl(link_url)
+
+# Example usage: crawl('http://example.com')
+
+def search_phrase(phrase):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('SELECT * FROM documents WHERE content LIKE ?', ('%' + phrase + '%',))
+    results = cursor.fetchall()
+    conn.close()
+    return results
+
+@app.route('/search', methods=['GET', 'POST'])
+def search():
+    if request.method == 'POST':
+        phrase = request.form['phrase']
+        results = search_phrase(phrase)
+        return render_template('search_results.html', results=results)
+    return render_template('search.html')
+
+def search_wildcard(pattern):
+    pattern = pattern.replace('*', '%')
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('SELECT * FROM documents WHERE content LIKE ?', (pattern,))
+    results = cursor.fetchall()
+    conn.close()
+    return results
+
+@app.route('/search_wildcard', methods=['GET', 'POST'])
+def search_wildcard_view():
+    if request.method == 'POST':
+        pattern = request.form['pattern']
+        results = search_wildcard(pattern)
+        return render_template('search_results.html', results=results)
+    return render_template('search_wildcard.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
