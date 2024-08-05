@@ -8,9 +8,13 @@
 </head>
 <body>
     <h1>Task 2</h1>
-    <form method="post">
+    <form method="post" enctype="multipart/form-data">
         <label for="input_data">Input Data:</label>
         <textarea id="input_data" name="input_data" rows="10" cols="30"></textarea>
+        <br>
+        <label for="input_file">Or upload a file:</label>
+        <input type="file" id="input_file" name="input_file">
+        <br>
         <button type="submit">Submit</button>
     </form>
     {% if result %}

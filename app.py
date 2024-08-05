@@ -1,8 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, send_file
 import sqlite3
 import numpy as np
 import json
 import os
+import subprocess
 import networkx as nx
 import requests
 from bs4 import BeautifulSoup
@@ -32,11 +33,26 @@ def index():
 # Routes for tasks 1-9
 @app.route('/task1', methods=['GET', 'POST'])
 def task1():
-    result = None
     if request.method == 'POST':
-        input_data = request.form['input_data']
+        # Check if a file was uploaded
+        input_file = request.files.get('input_file')
+        input_data = request.form.get('input_data')
+
+        if input_file:
+            # Read the content of the file
+            input_data = input_file.read().decode('utf-8')
+        elif input_data:
+            # Use the text area input data
+            pass
+        else:
+            return "No input provided", 400
+
+        # Process the input data (example processing)
         result = process_task1(input_data)
-    return render_template('task1.html', result=result)
+
+        return render_template('task1.html', result=result)
+
+    return render_template('task1.html')
 
 @app.route('/task2', methods=['GET', 'POST'])
 def task2():
@@ -413,6 +429,16 @@ def search_phrase(phrase):
     conn.close()
     return results
 
+def search_wildcard(pattern):
+    pattern = pattern.replace('*', '%')
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('SELECT * FROM documents WHERE content LIKE ?', (pattern,))
+    results = cursor.fetchall()
+    conn.close()
+    return results
+
 @app.route('/search', methods=['GET', 'POST'])
 def search():
     if request.method == 'POST':
@@ -437,7 +463,57 @@ def search_wildcard_view():
         pattern = request.form['pattern']
         results = search_wildcard(pattern)
         return render_template('search_results.html', results=results)
-    return render_template('search_wildcard.html')
+    return render_template('wild_search.html')
+
+@app.route('/generate', methods=['GET', 'POST'])
+def generate_data():
+    if request.method == 'POST':
+        task = request.form['task']
+        N = request.form.get('N')
+        M = request.form.get('M')
+        E = request.form.get('E')
+        R = request.form.get('R')
+        Q = request.form.get('Q')
+        doc_count = request.form.get('doc_count')
+
+        # Command generation based on input
+        cmd = ['python3', 'generate_test_data.py', task]
+        if N: cmd.extend(['--N', N])
+        if M: cmd.extend(['--M', M])
+        if E: cmd.extend(['--E', E])
+        if R: cmd.extend(['--R', R])
+        if Q: cmd.extend(['--Q', Q])
+        if doc_count: cmd.extend(['--doc_count', doc_count])
+
+        try:
+            # Execute the command
+            result = subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            # Log the output for debugging
+            print("stdout:", result.stdout.decode())
+            print("stderr:", result.stderr.decode())
+
+            # Define the expected output filename
+            output_filename = f"{task}_input.txt"
+            output_path = os.path.join(os.getcwd(), output_filename)
+
+            # Check if file exists
+            if not os.path.exists(output_path):
+                raise FileNotFoundError(f"Expected output file not found: {output_path}")
+
+            return send_file(output_path, as_attachment=True)
+
+        except subprocess.CalledProcessError as e:
+            print(f"Command '{' '.join(cmd)}' failed with error:")
+            print(e.stderr.decode())
+            return f"An error occurred: {e.stderr.decode()}", 500
+        except FileNotFoundError as e:
+            print(f"FileNotFoundError: {e}")
+            return f"An error occurred: {e}", 500
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+            return f"An unexpected error occurred: {e}", 500
+
+    return render_template('generate.html')
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -9,6 +9,8 @@
 <body>
     <h1>Book Management System</h1>
     <ul>
+        <li><a href="{{ url_for('search_wildcard_view') }}">Wildcard Search</a></li>
+        <li><a href="{{ url_for('search') }}">Search</a></li>
         <li><a href="{{ url_for('users') }}">Manage Users</a></li>
         <li><a href="{{ url_for('books') }}">Manage Books</a></li>
         <li><a href="{{ url_for('friendships') }}">Manage Friendships</a></li>
@@ -22,6 +24,7 @@
         <li><a href="{{ url_for('task7') }}">Task 7</a></li>
         <li><a href="{{ url_for('task8') }}">Task 8</a></li>
         <li><a href="{{ url_for('task9') }}">Task 9</a></li>
+        <a href="{{ url_for('generate_data') }}">Generate Test Data</a>
     </ul>
 </body>
 </html>

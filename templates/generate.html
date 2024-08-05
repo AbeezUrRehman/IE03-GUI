@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate Test Data</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Generate Test Data</h1>
+    <form method="POST" action="{{ url_for('generate_data') }}">
+        <label for="task">Task:</label>
+        <select name="task" id="task">
+            <option value="task1">Task 1</option>
+            <option value="task2">Task 2</option>
+            <option value="task3">Task 3</option>
+            <option value="task4">Task 4</option>
+            <option value="task5">Task 5</option>
+            <option value="task6">Task 6</option>
+            <option value="task7">Task 7</option>
+            <option value="task8">Task 8</option>
+        </select><br>
+
+        <label for="N">N:</label>
+        <input type="number" name="N" id="N" required><br>
+
+        <label for="M">M (optional):</label>
+        <input type="number" name="M" id="M"><br>
+
+        <label for="E">E (optional):</label>
+        <input type="number" name="E" id="E"><br>
+
+        <label for="R">R (optional):</label>
+        <input type="number" name="R" id="R"><br>
+
+        <label for="Q">Q (optional):</label>
+        <input type="number" name="Q" id="Q"><br>
+
+        <label for="doc_count">Document Count (optional):</label>
+        <input type="number" name="doc_count" id="doc_count"><br>
+
+        <button type="submit">Generate</button>
+    </form>
+    <a href="{{ url_for('index') }}">Back to Home</a>
+</body>
+</html>
